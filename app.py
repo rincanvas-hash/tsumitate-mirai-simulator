@@ -19,6 +19,7 @@ st.markdown(
 :root { --ink:#18362d; --green:#176b4b; --green-dark:#10553b; --paper:#fbfaf5; }
 .stApp { background:var(--paper); color:var(--ink); }
 .block-container { max-width:720px; padding-top:1.25rem; padding-bottom:2rem; }
+.block-container:has(.input-screen-marker) { padding-top:5rem; }
 h1,h2,h3 { color:var(--ink); }
 .app-title { color:var(--ink); font-size:clamp(1.65rem,7vw,2.15rem); font-weight:800;
   line-height:1.15; margin:0; text-align:center; }
@@ -38,6 +39,19 @@ div[data-testid="stSegmentedControl"] button, div[role="radiogroup"] button {
 }
 div[data-testid="stSegmentedControl"] > div, div[role="radiogroup"] { width:100%; }
 div[data-testid="stSegmentedControl"] button { flex:1; }
+.st-key-mode_label div[data-testid="stSegmentedControl"] button {
+  min-height:58px; border-radius:0; border-color:var(--green-dark); color:var(--ink);
+  background:white; font-size:1.05rem; font-weight:800;
+}
+.st-key-mode_label div[data-testid="stSegmentedControl"] button:first-child {
+  border-radius:12px 0 0 12px;
+}
+.st-key-mode_label div[data-testid="stSegmentedControl"] button:last-child {
+  border-radius:0 12px 12px 0;
+}
+.st-key-mode_label div[data-testid="stSegmentedControl"] button[aria-pressed="true"] {
+  background:var(--green-dark); color:white;
+}
 div.stButton > button, div.stFormSubmitButton > button {
   width:100%; border-radius:14px; font-weight:750;
 }
@@ -52,6 +66,12 @@ div.stFormSubmitButton > button { min-height:62px; font-size:1.2rem; margin-top:
 div[data-testid="stPlotlyChart"] { margin-top:-.45rem; }
 @media(max-width:640px){
   .block-container{padding: .75rem .85rem 1.5rem}
+  .block-container:has(.input-screen-marker){padding-top:4.5rem}
+  .block-container:has(.input-screen-marker) div[data-testid="stVerticalBlock"]{gap:.45rem}
+  .block-container:has(.input-screen-marker) .app-title{
+    font-size:clamp(1.25rem,6vw,1.5rem); white-space:nowrap;
+  }
+  .block-container:has(.input-screen-marker) .app-subtitle{margin:.1rem 0 .45rem}
   div[data-testid="stVerticalBlock"]{gap:.65rem}
   .result-number{margin-bottom:.35rem}
   .section-title{margin-top:1rem}
@@ -81,7 +101,11 @@ def rate_input(prefix: str) -> float:
 
 
 def input_screen() -> None:
+    components.html(
+        "<script>window.parent.scrollTo({top:0,left:0,behavior:'instant'});</script>", height=0,
+    )
     st.markdown(
+        '<div class="input-screen-marker"></div>'
         '<div class="app-title">積立未来シミュレーター</div>'
         '<div class="app-subtitle">毎月いくらで、未来はいくら？</div>',
         unsafe_allow_html=True,
