@@ -5,7 +5,6 @@ import html
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-import streamlit.components.v1 as components
 
 from calculator import investment_summary, monthly_series, months_to_target
 
@@ -18,8 +17,8 @@ st.markdown(
 <style>
 :root { --ink:#18362d; --green:#176b4b; --green-dark:#10553b; --paper:#fbfaf5; }
 .stApp { background:var(--paper); color:var(--ink); }
-.block-container { max-width:720px; padding-top:1.25rem; padding-bottom:2rem; }
-.block-container:has(.input-screen-marker) { padding-top:5rem; }
+.block-container { max-width:720px; padding-top:3rem; padding-bottom:2rem; }
+.block-container:has(.input-screen-marker) { padding-top:7.5rem; }
 h1,h2,h3 { color:var(--ink); }
 .app-title { color:var(--ink); font-size:clamp(1.65rem,7vw,2.15rem); font-weight:800;
   line-height:1.15; margin:0; text-align:center; }
@@ -34,23 +33,12 @@ h1,h2,h3 { color:var(--ink); }
 .comment { color:#314a41; line-height:1.7; margin:.1rem 0 .75rem; }
 .note { color:#68776f; font-size:.79rem; line-height:1.55; margin:.25rem 0; }
 .current-rate { color:#536a61; font-size:.82rem; margin-top:-.2rem; }
-div[data-testid="stSegmentedControl"] button, div[role="radiogroup"] button {
-  min-height:54px; font-size:clamp(.9rem,4vw,1.05rem); font-weight:750; border-radius:12px;
+.st-key-mode_future button, .st-key-mode_target button {
+  min-height:62px; border-radius:14px; border:1px solid #b7c9c1;
+  background:white; color:var(--ink); font-size:1.1rem; font-weight:800;
 }
-div[data-testid="stSegmentedControl"] > div, div[role="radiogroup"] { width:100%; }
-div[data-testid="stSegmentedControl"] button { flex:1; }
-.st-key-mode_label div[data-testid="stSegmentedControl"] button {
-  min-height:58px; border-radius:0; border-color:var(--green-dark); color:var(--ink);
-  background:white; font-size:1.05rem; font-weight:800;
-}
-.st-key-mode_label div[data-testid="stSegmentedControl"] button:first-child {
-  border-radius:12px 0 0 12px;
-}
-.st-key-mode_label div[data-testid="stSegmentedControl"] button:last-child {
-  border-radius:0 12px 12px 0;
-}
-.st-key-mode_label div[data-testid="stSegmentedControl"] button[aria-pressed="true"] {
-  background:var(--green-dark); color:white;
+.st-key-mode_future button[kind="primary"], .st-key-mode_target button[kind="primary"] {
+  background:var(--green-dark); color:white; border-color:var(--green-dark);
 }
 div.stButton > button, div.stFormSubmitButton > button {
   width:100%; border-radius:14px; font-weight:750;
@@ -65,8 +53,8 @@ div.stFormSubmitButton > button { min-height:62px; font-size:1.2rem; margin-top:
 .st-key-restart button { min-height:60px; font-size:1.08rem; }
 div[data-testid="stPlotlyChart"] { margin-top:-.45rem; }
 @media(max-width:640px){
-  .block-container{padding: .75rem .85rem 1.5rem}
-  .block-container:has(.input-screen-marker){padding-top:4.5rem}
+  .block-container{padding: 4.5rem .85rem 1.5rem}
+  .block-container:has(.input-screen-marker){padding-top:6.75rem}
   .block-container:has(.input-screen-marker) div[data-testid="stVerticalBlock"]{gap:.45rem}
   .block-container:has(.input-screen-marker) .app-title{
     font-size:clamp(1.25rem,6vw,1.5rem); white-space:nowrap;
@@ -92,6 +80,19 @@ def duration(months: int) -> str:
     return f"{years}年{remainder}か月" if remainder else f"{years}年"
 
 
+def select_mode(mode: str) -> None:
+    st.session_state.mode = mode
+
+
+def scroll_to_top() -> None:
+    """Return the browser to the top without rendering a component value."""
+    st.html(
+        '<span aria-hidden="true" style="display:none"></span>'
+        "<script>window.scrollTo({top:0,left:0,behavior:'instant'});</script>",
+        unsafe_allow_javascript=True,
+    )
+
+
 def rate_input(prefix: str) -> float:
     choices = ["3%", "4%", "5%", "6%", "7%", "10%", "自由入力"]
     selected = st.selectbox("想定利回り", choices, index=2, key=f"{prefix}_rate_kind")
@@ -101,23 +102,25 @@ def rate_input(prefix: str) -> float:
 
 
 def input_screen() -> None:
-    components.html(
-        "<script>window.parent.scrollTo({top:0,left:0,behavior:'instant'});</script>", height=0,
-    )
+    scroll_to_top()
     st.markdown(
         '<div class="input-screen-marker"></div>'
         '<div class="app-title">積立未来シミュレーター</div>'
         '<div class="app-subtitle">毎月いくらで、未来はいくら？</div>',
         unsafe_allow_html=True,
     )
-    mode_label = st.segmented_control(
-        "モードを選択",
-        ["将来いくら？", "目標達成まで何年？"],
-        default=st.session_state.get("mode_label", "将来いくら？"),
-        key="mode_label",
-        label_visibility="collapsed",
+    mode = st.session_state.get("mode", "future")
+    mode_columns = st.columns(2, gap="small")
+    mode_columns[0].button(
+        "将来いくら？", key="mode_future", use_container_width=True,
+        type="primary" if mode == "future" else "secondary",
+        on_click=select_mode, args=("future",),
     )
-    mode = "future" if mode_label == "将来いくら？" else "target"
+    mode_columns[1].button(
+        "目標達成まで何年？", key="mode_target", use_container_width=True,
+        type="primary" if mode == "target" else "secondary",
+        on_click=select_mode, args=("target",),
+    )
     with st.form(f"inputs_{mode}"):
         monthly = float(st.number_input("毎月の積立額（万円）", 1, 100, 3, 1, key=f"{mode}_monthly"))
         if mode == "future":
@@ -132,7 +135,7 @@ def input_screen() -> None:
                       if target_choice == "自由入力" else float(values[target_choice]))
             years = None
         rate = rate_input(mode)
-        submitted = st.form_submit_button("🌱 未来を見てみる")
+        submitted = st.form_submit_button("🌱 未来を見てみる", use_container_width=True)
     if submitted:
         st.session_state.result = {"mode": mode, "monthly": monthly, "years": years, "target": target, "rate": rate}
         st.session_state.screen = "result"
@@ -179,9 +182,7 @@ def result_comment(mode: str, months: int, summary: dict[str, float], target: fl
 
 def result_screen() -> None:
     if st.session_state.pop("scroll_to_result", False):
-        components.html(
-            "<script>window.parent.scrollTo({top:0,left:0,behavior:'instant'});</script>", height=0,
-        )
+        scroll_to_top()
     if st.button("← 条件を変える", key="back_top"):
         st.session_state.screen = "input"
         st.rerun()
