@@ -15,14 +15,15 @@ RATES = [3.0, 4.0, 5.0, 6.0, 7.0, 10.0]
 st.markdown(
     """
 <style>
-:root { --ink:#18362d; --green:#176b4b; --green-dark:#10553b; --paper:#fbfaf5; }
+:root { --ink:#18362d; --green:#176b4b; --green-dark:#10553b; --mode:#e85d3f;
+  --mode-hover:#d94f33; --gold:#e0b23d; --gold-hover:#d2a331; --paper:#fbfaf5; }
 .stApp { background:var(--paper); color:var(--ink); }
 .block-container { max-width:720px; padding-top:3rem; padding-bottom:2rem; }
 .block-container:has(.input-screen-marker) { padding-top:7.5rem; }
 h1,h2,h3 { color:var(--ink); }
 .app-title { color:var(--ink); font-size:clamp(1.65rem,7vw,2.15rem); font-weight:800;
   line-height:1.15; margin:0; text-align:center; }
-.app-subtitle { color:#64746e; font-size:.95rem; margin:.25rem 0 .85rem; text-align:center; }
+.app-subtitle { color:#64746e; font-size:.95rem; margin:.25rem 0 1.25rem; text-align:center; }
 .result-label { color:#536a61; font-size:1.05rem; font-weight:700; text-align:center; margin-top:.35rem; }
 .result-number { color:var(--green); font-size:clamp(2.8rem,13vw,4.7rem); line-height:1.12;
   font-weight:900; letter-spacing:-.04em; text-align:center; white-space:nowrap; margin:.25rem 0 .65rem; }
@@ -37,17 +38,27 @@ h1,h2,h3 { color:var(--ink); }
   min-height:62px; border-radius:14px; border:1px solid #b7c9c1;
   background:white; color:var(--ink); font-size:1.1rem; font-weight:800;
 }
-.st-key-mode_future button[kind="primary"], .st-key-mode_target button[kind="primary"] {
-  background:var(--green-dark); color:white; border-color:var(--green-dark);
-}
 div.stButton > button, div.stFormSubmitButton > button {
   width:100%; border-radius:14px; font-weight:750;
 }
-div.stButton > button[kind="primary"], div.stFormSubmitButton > button {
+div.stButton > button[kind="primary"] {
   background:var(--green); color:white; border-color:var(--green); box-shadow:0 4px 12px rgba(23,107,75,.2);
 }
-div.stButton > button[kind="primary"]:hover, div.stFormSubmitButton > button:hover {
+div.stButton > button[kind="primary"]:hover {
   background:var(--green-dark); color:white; border-color:var(--green-dark);
+}
+.st-key-mode_future button[kind="primary"], .st-key-mode_target button[kind="primary"] {
+  background:var(--mode); color:white; border-color:var(--mode);
+}
+.st-key-mode_future button:hover, .st-key-mode_target button:hover,
+.st-key-mode_future button[kind="primary"]:hover, .st-key-mode_target button[kind="primary"]:hover {
+  background:var(--mode-hover); color:white; border-color:var(--mode-hover);
+}
+div.stFormSubmitButton > button, .st-key-restart div.stButton > button[kind="primary"] {
+  background:var(--gold); color:#17324d; border-color:var(--gold); box-shadow:0 4px 12px rgba(110,82,15,.2);
+}
+div.stFormSubmitButton > button:hover, .st-key-restart div.stButton > button[kind="primary"]:hover {
+  background:var(--gold-hover); color:#17324d; border-color:var(--gold-hover);
 }
 div.stFormSubmitButton > button { min-height:62px; font-size:1.2rem; margin-top:.35rem; }
 .st-key-restart button { min-height:60px; font-size:1.08rem; }
@@ -59,7 +70,7 @@ div[data-testid="stPlotlyChart"] { margin-top:-.45rem; }
   .block-container:has(.input-screen-marker) .app-title{
     font-size:clamp(1.25rem,6vw,1.5rem); white-space:nowrap;
   }
-  .block-container:has(.input-screen-marker) .app-subtitle{margin:.1rem 0 .45rem}
+  .block-container:has(.input-screen-marker) .app-subtitle{margin:.1rem 0 1.25rem}
   div[data-testid="stVerticalBlock"]{gap:.65rem}
   .result-number{margin-bottom:.35rem}
   .section-title{margin-top:1rem}
@@ -102,7 +113,7 @@ def rate_input(prefix: str) -> float:
 
 
 def input_screen() -> None:
-    scroll_to_top()
+    _ = scroll_to_top()
     st.markdown(
         '<div class="input-screen-marker"></div>'
         '<div class="app-title">積立未来シミュレーター</div>'
@@ -182,7 +193,7 @@ def result_comment(mode: str, months: int, summary: dict[str, float], target: fl
 
 def result_screen() -> None:
     if st.session_state.pop("scroll_to_result", False):
-        scroll_to_top()
+        _ = scroll_to_top()
     if st.button("← 条件を変える", key="back_top"):
         st.session_state.screen = "input"
         st.rerun()
@@ -230,4 +241,4 @@ def result_screen() -> None:
 
 if "screen" not in st.session_state:
     st.session_state.screen = "input"
-input_screen() if st.session_state.screen == "input" else result_screen()
+_ = input_screen() if st.session_state.screen == "input" else result_screen()
